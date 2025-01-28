@@ -59,15 +59,19 @@ ul.posts li {
 .profile-image {
     border-radius: 50%;
     overflow: hidden;
-    width: 60px;  /* Size of the image container */
-    height: 60px; /* Size of the image container */
+    width: 60px;  /* Ensure the container is square */
+    height: 60px; /* Ensure the container is square */
     margin-right: 20px; /* Space between the image and the text */
+    position: relative; /* For centering the image */
 }
 
 .profile-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover; /* Crop the image to fit the container */
+    position: absolute; /* Center the image */
+    top: 0;
+    left: 0;
 }
 
 .blurb {
