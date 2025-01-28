@@ -52,22 +52,22 @@ ul.posts li {
 /* Profile Container for image and description */
 .profile-container {
     display: flex;
-    align-items: center;
+    align-items: center; /* Vertically align the image and text */
     margin: 20px 0;
 }
 
 .profile-image {
     border-radius: 50%;
     overflow: hidden;
-    width: 100px; /* Adjust the size of the image */
-    height: 100px;
-    margin-right: 20px; /* Space between image and text */
+    width: 60px;  /* Size of the image container */
+    height: 60px; /* Size of the image container */
+    margin-right: 20px; /* Space between the image and the text */
 }
 
 .profile-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Ensures the image fits within the circular area */
+    object-fit: cover;
 }
 
 .blurb {
@@ -75,4 +75,17 @@ ul.posts li {
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px; /* Optional: Control the max width of the text */
+    width: 100%; /* Ensure the text block takes full available width */
+}
+
+h1 {
+    font-size: 2.5em; /* Adjust the header size for better spacing */
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 1.2em;
+    line-height: 1.6em;
+    color: #333;
 }
