@@ -59,8 +59,8 @@ ul.posts li {
 .profile-image {
     border-radius: 50%;
     overflow: hidden;
-    width: 60px;  /* Ensure the container is square */
-    height: 60px; /* Ensure the container is square */
+    width: 100px;  /* Ensure the container is square */
+    height: 100px; /* Ensure the container is square */
     margin-right: 20px; /* Space between the image and the text */
     position: relative; /* For centering the image */
 }
