@@ -278,17 +278,17 @@ bottom: .4em;
 <p>The dataset we used is comprised of 130 CT scans of the torso area, from the LiTS17 challenge (Liver Tumor Segmentation Challenge) [3]. The dataset also provides the segmentation masks for the liver. Its total size is around 50GB, including the masks.</p>
 <p>Each of these volumes is a DICOM file containing an arbitrary number of 512x512 images, with this number ranging from 75 to 624, and each of these images corresponds to a different vertical &quot;slice&quot; of the torso. The values of the pixels belong to the <a href="https://en.wikipedia.org/wiki/Hounsfield_scale">Hounsfield scale</a>.</p>
 <p>For example, let&apos;s visualize a slice (n. 55) from the first volume of the dataset:</p>
-<p><img src="./assets/dataset-vis-1.png" alt="dataset-vis-1"></p>
+<p><img src="../assets/dataset-vis-1.png" alt="dataset-vis-1"></p>
 <p>Now because we want to specifically target the liver, we use the values of the Hounsfield scale that correspond to it as a filter. The result is the following:</p>
-<p><img src="./assets/dataset-vis-2.png" alt="dataset-vis-2"></p>
+<p><img src="../assets/dataset-vis-2.png" alt="dataset-vis-2"></p>
 <p>Finally, we downsampled the slices and masks to 256 by max pooling, to decrease the size of the input. As can be seen in the resulting image, the information loss due to downsampling is tolerable:</p>
-<p><img src="./assets/dataset-vis-3.png" alt="dataset-vis-3"></p>
+<p><img src="../assets/dataset-vis-3.png" alt="dataset-vis-3"></p>
 <p>To use this dataset more efficiently with PyTorch, we created a class extending PyTorch&apos;s DataSet class and created indices for it that allow random access.</p>
 <h2 class="mume-header" id="instance-segmentation">Instance segmentation</h2>
 
 <p>Before diving in the model architectures it would be wise to define the computer vision task that they aim to solve, the task of semantic segmentation.</p>
 <p>Semantic segmentation, or image segmentation, is the task of clustering parts of an image together which belong to the same object class. It is a form of pixel-level prediction because each pixel in an image is classified according to a category, making the labels class-aware [4]. Visualy, this can be seen in the image below (<a href="https://ai-pool.com/d/could-you-explain-me-how-instance-segmentation-works">source</a>), where also other computer vision taks are presented for comparison.</p>
-<p><img src="./assets/image-seg.png" alt="image-seg"></p>
+<p><img src="../assets/image-seg.png" alt="image-seg"></p>
 <h2 class="mume-header" id="models">Models</h2>
 
 <p>The two main architectures compared in this blog will be described, starting from UNet and continuing with its extension UNet3+ (which builds on top of the original UNet).</p>
@@ -301,7 +301,7 @@ bottom: .4em;
 <p>On the other hand, the decoder, which is a symmetric expanding of the first path, comprises of upsamling and transpose convolution layers. It is used to enable precised localization. On a high level, its main goal is to take an abstract representation of the encoder and generate a semantic segmentation mask.<br>
 The decoder block starts with a 2x2 transpose convolution, which is then conatenated with the corresponding skip connection feature map from the encoder block. Next, these concatenations are followed by two 3x3 convolutional layers, with each followed by a ReLU activation function.</p>
 <p>The output of the last decoder passes through a 1x1 convolution with sigmoid function.</p>
-<p><img src="./assets/unet.png" alt="unet"></p>
+<p><img src="../assets/unet.png" alt="unet"></p>
 <p>It is worth noting that the whole architecture consists of fully convolutional layers, allowing for input images of different sizes. Furthermore, the skip connections intoduced in this work, are used to provide additional information that helps the decoder generate better semantic features. They can act as a shortcut connection that helps the indirect flow of gradients to the earlier layers without any degradation.</p>
 <p>Lastly, two main differences in the implementation can be observed compared to the original UNet paper. Both of them are chosen in order to have the same submodule implementation compared to the next model and remove any doubt of differences because of them.</p>
 <ul>
@@ -357,7 +357,7 @@ The decoder block starts with a 2x2 transpose convolution, which is then conaten
 and coarse-grained semantics in full scales.</p>
 <p>In contrast to UNet, a set of inter decoder-encoder skip connection delivers the low-level detailed information to an encoder stage, from all the current and higher encoder stages by applying non-overlapping max pooling. On the other, hand a chain of intra decoder skip connections transmits the high-level semantic segmentation from lower stage decoder stages by applying linear interpolation.</p>
 <p>A figure is provided to help in visualizing it. Furthermore, the decoder 3 stage shown will be analyzed as a hands-on example.</p>
-<p><img src="./assets/unet3.png" alt="unet3plus"></p>
+<p><img src="../assets/unet3.png" alt="unet3plus"></p>
 <p>For the higher decoder stages (in this case stage 1 and 2), a maxpooling followed by a DoubleConv + BN + ReLU is applied. The maxpooling is based on the distance of the stage to the current one.</p>
 <p>In general, we get <strong><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mi>a</mi><mi>x</mi><mi>p</mi><mi>o</mi><mi>o</mi><mi>l</mi><mo stretchy="false">(</mo><msup><mn>2</mn><mi>i</mi></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">maxpool(2^i)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0747em;vertical-align:-0.25em;"></span><span class="mord mathnormal">ma</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal">oo</span><span class="mord mathnormal" style="margin-right:0.01968em;">l</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></strong>, where <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span></span></span></span> is equal to <em>current decoder stage index</em> minus the <em>encoder index where the skip connection is coming from</em>. For example, for decoder 3 and a skip connection coming from encoder 1, we would have <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>3</mn><mo>&#x2212;</mo><mn>1</mn><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">i = 3-1 = 2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6595em;"></span><span class="mord mathnormal">i</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">&#x2212;</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span>, so <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mi>a</mi><mi>x</mi><mi>p</mi><mi>o</mi><mi>o</mi><mi>l</mi><mo stretchy="false">(</mo><mn>4</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">maxpool(4)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">ma</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal">oo</span><span class="mord mathnormal" style="margin-right:0.01968em;">l</span><span class="mopen">(</span><span class="mord">4</span><span class="mclose">)</span></span></span></span>.</p>
 <p>On the other hand, the lower encoder stages are not used, but the high-level semantic information comes instead from the larger-scale decoder stages (here stage 4 and 5). In order to concatenate them, considering the difference in tensor size from the intermediate operations, contrary to previously when maxpooling was applied, no bilinear interpolation is used with a scale factor <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mi>i</mi></msup></mrow><annotation encoding="application/x-tex">2^i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8247em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8247em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span></span></span></span></span></span></span></span>.</p>
@@ -456,7 +456,7 @@ criterion = nn.BCEWithLogitsLoss()
 </tbody>
 </table>
 <p>The train and test loss curves for 11 epochs are shown below:</p>
-<p><img src="./assets/losses.png" alt="losses"></p>
+<p><img src="../assets/losses.png" alt="losses"></p>
 <p>In addition, four examples of the results are provided corresponding to the following two cases:</p>
 <ol>
 <li>Three slices from three different volumes of the CT scans.</li>
@@ -464,16 +464,16 @@ criterion = nn.BCEWithLogitsLoss()
 </ol>
 <h4 class="mume-header" id="unet-1">UNet</h4>
 
-<p><img src="./assets/2-unet.png" alt="2-unet.png"></p>
-<p><img src="./assets/3-unet.png" alt="3-unet.png"></p>
-<p><img src="./assets/4-unet.png" alt="4-unet.png"></p>
-<p><img src="./assets/1-unet.png" alt="1-unet.png"></p>
+<p><img src="../assets/2-unet.png" alt="2-unet.png"></p>
+<p><img src="../assets/3-unet.png" alt="3-unet.png"></p>
+<p><img src="../assets/4-unet.png" alt="4-unet.png"></p>
+<p><img src="../assets/1-unet.png" alt="1-unet.png"></p>
 <h4 class="mume-header" id="unet3-1">UNet3+</h4>
 
-<p><img src="./assets/2-unet3.png" alt="2-unet3.png"></p>
-<p><img src="./assets/3-unet3.png" alt="3-unet3.png"></p>
-<p><img src="./assets/4-unet3.png" alt="4-unet3.png"></p>
-<p><img src="./assets/1-unet3.png" alt="1-unet3.png"></p>
+<p><img src="../assets/2-unet3.png" alt="2-unet3.png"></p>
+<p><img src="../assets/3-unet3.png" alt="3-unet3.png"></p>
+<p><img src="../assets/4-unet3.png" alt="4-unet3.png"></p>
+<p><img src="../assets/1-unet3.png" alt="1-unet3.png"></p>
 <h2 class="mume-header" id="conclusions">Conclusions</h2>
 
 <p>Based on the two models trained for 11 epochs, the UNet3+ proved to perform better on this dataset, as can be noticed by the visualised results. It seems visually that the Intersection-Over-Union score is also higher. As expected from the introduction of new skip connections, more fine details were preserved leading to a better segmentation result.</p>
