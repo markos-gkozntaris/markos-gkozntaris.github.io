@@ -8,9 +8,15 @@ title: Markos Gkozntaris
     </div>
     <div class="blurb">
         <h1>Hi there, I'm Markos Gkozntaris!</h1>
-        <p>I'm an electrical engineer with a passion for tackling complex problems and building innovative solutions in the realm of Artificial Intelligence. With a strong foundation in engineering principles and a fascination for cutting-edge AI technologies, I enjoy turning ideas into reality—whether it's developing intelligent systems, automating processes, or exploring new frontiers in machine learning. <a href="/about">Read more about my life...</a></p>
-        <h1>Blogs</h1>
-        <p><a href="blog/CTscans.html" target="_blank">Ablation study of UNet3+ on CT scans (Python/PyTorch)</a></p>
-        <p><a href="blog/HouseGAN.html" target="_blank">Paper Reproduction: "House-GAN: Relational Generative Adversarial Networks for Graph-constrained House Layout Generation" (Python/PyTorch)</a></p>
+        <p>I'm an electrical engineer with a passion for tackling complex problems and building innovative solutions in the realm of Artificial Intelligence. With a strong foundation in engineering principles and a fascination for cutting-edge AI technologies, I enjoy turning ideas into reality—whether it's developing intelligent systems, automating processes, or exploring new frontiers in machine learning.</p> {# Removed broken /about link #}
+        <h2>Recent Blog Posts</h2>
+        <ul>
+          {% for post in site.posts limit:5 %} {# List latest 5 posts #}
+            <li>
+              <a href="{{ post.url | relative_url }}">{{ post.title }}</a> ({{ post.date | date: "%B %d, %Y" }})
+            </li>
+          {% endfor %}
+        </ul>
+        <p><a href="/blog.html">See all posts...</a></p> {# Link to the main blog page #}
     </div><!-- /.blurb -->
 </div><!-- /.profile-container -->
