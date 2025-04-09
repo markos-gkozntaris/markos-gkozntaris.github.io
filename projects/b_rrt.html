@@ -136,7 +136,7 @@
         <p>Since, RRT provides only a feasible solution and not an optimal, researchers nowadays are working on improved algorithms such as RRT<sup>*</sup>, which provide the optimal path. However, these algorithms are inefficient as sampling randomly explores the entire map, and for that reason researchers have tried to guide the sampling in a way to reduce the computation time<span class="citation">[1-3]</span>. Apart, from this many other methodologies are also being developed and researched into, like path planning using vector fields, which are in-turn improving the accuracy for path planning<span class="citation">[4]</span>. This project employs a bi-birectional guided RRT (B-RRT), which is compared to a traditional RRT. The software package auxiliary to the path planning like for control, simulation, trajectory smoothening, etc are adapted from the project by L. Yiren, C. Myles, L. Wudao and Z. Xuanyu.</p>
 
         <div class="figure">
-            <img src="..assets/images/quadrotor_schematic.png" alt="Schematic drawing of the quadrotor">
+            <img src="../assets/images/quadrotor_schematic.png" alt="Schematic drawing of the quadrotor">
             <div class="caption">Fig 1: Schematic drawing of the quadrotor.</div>
         </div>
     </div>
@@ -246,7 +246,7 @@
         <p>The planned returned from the back tracking algorithm is simplified using the following process: there are two nested iterations over the final path nodes. The algorithm checks whether there are collision-free straight line connections between every pair of nodes in an ordered fashion. First, it checks the starting point with the other points in the list. Then, the feasible connection with the node that has the largest index is kept and the nodes that have indices in-between the first and such node are discarded from the list. The next iteration begins from the node that was used to simplify the path until the last node is reached. The optimization is performed in the total distance traveled. The process is depicted in Figure 2. All possible connections with the right-most shaded gray node are checked. It is visible how the path is simplified.</p>
 
         <div class="figure">
-            <img src="..assets/images/simplification.png" alt="Path simplification process">
+            <img src="../assets/images/simplification.png" alt="Path simplification process">
             <div class="caption">Fig 2: Representation of the path simplification process. The final path contains does not contain unnecessary connections.</div>
         </div>
 
@@ -305,7 +305,7 @@ RRT_path ← path_simplification(RRT_path, map)
         <p>For the sake of this application we have prepared a map of a room, where fire is considered an obstacle. In addition to fire, there are other obstacles that may exist in a house. We assume that every obstacle is convex and is characterized by a polyhedral geometric shape. Non-convex obstacles can be described as a union of convex obstacles.</p>
 
         <div class="figure">
-            <img src="..assets/images/rrt_2.png" alt="RRT algorithm path">
+            <img src="../assets/images/rrt_2.png" alt="RRT algorithm path">
             <div class="caption">Fig 3: RRT algorithm path: the thick segments compose the planned with the algorithm. A YouTube video is provided showing the tree growth real time.</div>
         </div>
 
@@ -353,13 +353,13 @@ RRT_path ← path_simplification(RRT_path, map)
         </table>
 
         <div class="figure">
-            <img src="..assets/images/rrt_function_optimized3_cropped.png" alt="Proposed RRT algorithm path">
+            <img src="../assets/images/rrt_function_optimized3_cropped.png" alt="Proposed RRT algorithm path">
             <div class="caption">Fig 4: Proposed RRT algorithm path: the thick segments compose the path planned with the RRT. The total path is considerably smaller. A YouTube video is provided showing the tree growth real time.</div>
         </div>
 
         <div class="figure">
-            <img src="..assets/images/map3_rrt.png" alt="RRT algorithm">
-            <img src="..assets/images/map3_rrt_opt.png" alt="Proposed RRT algorithm">
+            <img src="../assets/images/map3_rrt.png" alt="RRT algorithm">
+            <img src="../assets/images/map3_rrt_opt.png" alt="Proposed RRT algorithm">
             <div class="caption">Fig 5: a) RRT algorithm. b) Proposed RRT algorithm</div>
         </div>
     </div>
