@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bi-directional Rapidly-exploring Random Tree (B-RRT) algorithm for a quadrotor moving in 3D-space</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 18px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        h3 {
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .authors {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .abstract {
+            font-style: italic;
+            margin-bottom: 30px;
+            padding: 10px;
+            border-left: 3px solid #ccc;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+        .figure {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .figure img {
+            max-width: 90%;
+        }
+        .figure .caption {
+            font-style: italic;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .equation {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .algorithm {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .references {
+            margin-top: 30px;
+        }
+        .references ol {
+            padding-left: 25px;
+        }
+        .references li {
+            margin-bottom: 5px;
+        }
+        pre {
+            white-space: pre-wrap;
+        }
+        .matrix {
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+            border-left: 1px solid;
+            border-right: 1px solid;
+            padding: 0.25em 0.5em;
+            text-align: center;
+        }
+        .citation {
+            font-size: 85%;
+            vertical-align: super;
+        }
+    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <h1>Bi-directional Rapidly-exploring Random Tree (B-RRT) algorithm for a quadrotor moving in 3D-space</h1>
+    
+    <div class="authors">
+        <p>Georgios Apostolides, Guru Deep Singh , Kevin Voogd , Markos Gkozntaris</p>
+    </div>
+
+    <div class="abstract">
+        <h2>Abstract</h2>
+        <p>This project focuses on the path planning algorithm for a quadrotor - a Bi-directional Rapidly-exploring Random Tree (B-RRT). The algorithm devised optimizes the list of vertices sampled to provide locally optimized planned trajectory. The advantage of B-RRT over traditional RRT is reduced computation time and locally optimized path to goal. We present the algorithm as a simple extension to RRT that could be further extended by more advanced path-planning algorithms. The path computed is smoothened using minimum snap and is then simulated on MATLAB, generating a collision free trajectory while complying with the dynamics of quadrotor.</p>
+    </div>
+
+    <div class="section">
+        <h2>1. INTRODUCTION</h2>
+        <p>The project presents the modelling of a Crazyflie 2.0 quadrotor developed by Bitcraze, which is controlled using a position and an attitude controller to follow a trajectory computed using Rapidly-exploring Random Trees (RRT) algorithm and its extensions in order to avoid collision with the obstacles present in the given map.</p>
+        
+        <p>The objective of the project is to plan a path for the quadrotor from a start to a goal position. The map for the project is chosen as a room ablaze with a human stuck inside and the quadrotor should reach the human and provide him with the necessary tools, such as a oxygen mask, or communication instruments like a mobile phone. The project considers the quadrotor moving in a 3D space with an initial position outside the room and goal position near the human. The assumption undertaken is that the fire is considered to be non-progressive, and hence assumed as a static obstacle.</p>
+        
+        <p>The high dimensionality of the configuration space, the assumption of static obstacles, as well as, the simplicity and robustness of RRT, makes it the best choice compared to algorithms like Probabilistic Roadmap Method (PRM) or motion primitives. The RRT provides a feasible solution if one is found within the constraint of iterations.</p>
+        
+        <p>Since, RRT provides only a feasible solution and not an optimal, researchers nowadays are working on improved algorithms such as RRT<sup>*</sup>, which provide the optimal path. However, these algorithms are inefficient as sampling randomly explores the entire map, and for that reason researchers have tried to guide the sampling in a way to reduce the computation time<span class="citation">[1-3]</span>. Apart, from this many other methodologies are also being developed and researched into, like path planning using vector fields, which are in-turn improving the accuracy for path planning<span class="citation">[4]</span>. This project employs a bi-birectional guided RRT (B-RRT), which is compared to a traditional RRT. The software package auxiliary to the path planning like for control, simulation, trajectory smoothening, etc are adapted from the project by L. Yiren, C. Myles, L. Wudao and Z. Xuanyu.</p>
+
+        <div class="figure">
+            <img src="..assets/images/quadrotor_schematic.png" alt="Schematic drawing of the quadrotor">
+            <div class="caption">Fig 1: Schematic drawing of the quadrotor.</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. ROBOT MODEL</h2>
+        
+        <h3>2.1 Kinematic Model</h3>
+        <p>The workspace is \(W=R^3\), as the quadrotor can displace to all positions in space provided that there are no obstacles at that place. The configuration space is \(C=SE(3)\)<span class="citation">[5]</span>. The robot is able to move forward, in a side direction and upwards. In addition to that it can rotate in 3D space using the three Euler angles: Roll \((\phi)\), Pitch \((\theta)\), Yaw \((\psi)\).</p>
+        
+        <p>The position and the orientation of the quadrotor in the inertial world frame is \(\mathbf{\xi}_I = [x,y,z,\phi,\theta,\psi]^T\) and the vector containing the linear and angular velocities expressed in the body frame is \(\dot{\mathbf{\xi}}_B = [u,v,w,p,q,r]^T = [\mathbf{v}_B, \mathbf{\omega}_B]^T\). The orthonormal basis vectors that represent the inertial and body-fixed frames are, on the hand hand, \(\mathbf{\hat{a}_1}\), \(\mathbf{\hat{a}_2}\), and \(\mathbf{\hat{a}_3}\), and on the other hand, \(\mathbf{\hat{b}_1}\), \(\mathbf{\hat{b}_2}\), and \(\mathbf{\hat{b}_3}\). In Fig. 1 a schematic drawing is shown, depicting the frames of reference and also the forces and moments acting on the object. The linear velocities in the body-fixed frame are related to the world velocities via a rotation matrix \(\boldsymbol{R}\), and similarly with the angular velocities with a Jacobian matrix \(\boldsymbol{J}\)<span class="citation">[6]</span>. In this report, the convention yaw-pitch-roll is used, resulting in the Euler-based rotation matrix \(\mathbf{R}(\phi,\theta,\psi)=R_{z}(\psi)R_{x}(\phi)R_{y}(\theta)\)<span class="citation">[7]</span>.</p>
+
+        <div class="equation">
+            \[\textbf{R}=
+            \begin{pmatrix}
+            \text{c}\theta \text{c}\psi -\text{s}\phi\text{s}\psi\text{s}\theta & -\text{c}\phi \text{s}\psi & \text{c}\psi\text{s}\theta + \text{c}\theta\text{s}\phi\text{s}\psi\\
+            \text{c}\theta\text{s}\psi+\text{c}\psi\text{s}\phi\text{s}\theta & \text{c}\phi \text{c}\psi & \text{s}\psi\text{s}\theta - \text{c}\psi\text{c}\theta\text{s}\phi\\
+            -\text{c}\phi\text{s}\theta & \text{s}\phi & \text{c}\phi \text{c}\theta
+            \end{pmatrix}\]
+        </div>
+
+        <p>where c(\(\cdot\)) and s(\(\cdot\)) are \(\cos({\cdot})\) and \(\sin({\cdot})\) respectively and the angular velocities are related by the inverse Jacobian matrix<span class="citation">[8]</span>:</p>
+
+        <div class="equation">
+            \[\begin{pmatrix}
+            p \\
+            q \\
+            r \\
+            \end{pmatrix} = 
+            \begin{pmatrix}
+            \text{c}\theta & 0 & -\text{c}\phi\text{s}\theta\\
+            0 & 1 & \text{s}\phi \\
+            \text{s}\theta & 0 & \text{c}\phi\text{c}\theta
+            \end{pmatrix}
+            \begin{pmatrix}
+            \dot{\phi}\\
+            \dot{\theta}\\
+            \dot{\psi}
+            \end{pmatrix}\]
+        </div>
+
+        <h3>2.2 Dynamic Model</h3>
+        <p>In the dynamic modelling of the quadrotor it is assumed that the only forces acting on it are its own weight and the thrust force. Other forces such as drag are neglected. Then, Newton's second law is derived as:</p>
+        
+        <div class="equation">
+            \[m(\mathbf{\omega}_B\times\mathbf{v}_B+\dot{\mathbf{v}}_B) = \mathbf{F}_B = (f_1+f_2+f_3+f_4)\mathbf{b_3}-mg\mathbf{R}^T\mathbf{a}_3\]
+        </div>
+
+        <div class="equation">
+            \[\mathbf{I\omega}_B + \mathbf{\omega}_B\times(\mathbf{I\omega}_B) = \mathbf{M}_B = (f_2 - f_4)L_c\mathbf{b_1} + (f_3 - f_1)L_c\mathbf{b_2} + (-m_1+m_2-m_3+m_4)\mathbf{b_3}\]
+        </div>
+
+        <p>where \(m\) is the mass of the quadrotor and \(\mathbf{F}_B\) is the resultant force acting on the quadrotor with respect to the body frame. In the second equation, \(\mathbf{I}\) is the diagonal inertia matrix with components \(I_x\), \(I_y\) and \(I_z\) and \(\mathbf{M}_B\) is the resultant moment expressed in body-frame coordinates. The forces and the moments are related to the speed of the motors as \(f_i = k_F\omega_i^2\) and \(m_i = k_M\omega_i^2\), where \(k_F\) and \(k_M\) are constants and \(\omega_i\) is the angular speed of the rotor. The ratio of these two constants is expressed as \(\gamma = \frac{k_M}{k_F}\).</p>
+
+        <h3>2.3 Linearization</h3>
+        <p>The system is linearized at the hovering point: \(\textbf{r}=\textbf{r}_0\), \(\theta = \phi = 0\), \(\psi=\psi_0\), \(\dot{x}=\dot{y}=\dot{z}=0\), where the roll and pitch angles are small (\(\text{c}\phi \approx 1\), \(\text{s}\phi \approx 0\), \(\text{c}\theta \approx 1\) and \(\text{s}\theta \approx 0\)). The thrust force produced by each propeller is \(f_{i,0} = \frac{mg}{4}\). The values for the inputs at hover are \(u_{1,0} = mg\), \(\boldsymbol{u}_{2,0}=\boldsymbol{0}\). Linearizing the resultant force equation results in:</p>
+
+        <div class="equation">
+            \[\ddot{x} = g(\Delta\theta\cos{\psi_0}+\Delta\phi\sin{\psi_0})\]
+        </div>
+        <div class="equation">
+            \[\ddot{y} = g(\Delta\theta\sin\psi_0 - \Delta\phi\cos\psi_0)\]
+        </div>
+        <div class="equation">
+            \[\ddot{z} = \frac{u_1}{m}-g\]
+        </div>
+
+        <p>and the resultant moment equation in:</p>
+
+        <div class="equation">
+            \[\begin{pmatrix}
+            \dot{p}\\
+            \dot{q}\\
+            \dot{r}
+            \end{pmatrix}
+            =
+            I^{-1}
+            \begin{pmatrix}
+            0 & L & 0 & -L\\
+            -L & 0 & L & 0\\
+            \gamma & -\gamma & \gamma & -\gamma
+            \end{pmatrix}
+            \begin{pmatrix}
+            f_1\\
+            f_2\\
+            f_3\\
+            f_4
+            \end{pmatrix}\]
+        </div>
+
+        <h3>2.4 Control structure</h3>
+        <p>For the purpose of this application a cascade controller is used, with the inner loop being an attitude controller and the outer loop being a position controller. In the inner loop, we specify the orientation through the yaw, pitch and roll angles and feedback the actual attitude and the angular velocity. From this loop, input \(u_2\) is calculated, which is a function of the four thrusts and moments that we get from the motor speeds and is computed based on the desired attitude. On the other hand, from the outer loop, a position feedback loop, we calculate the input \(u_1\), which is a sum of all the thrust forces, based on the specified position and yaw angle generated form the trajectory planner and the actual position and velocity.</p>
+
+        <p>In this approach, we consider a linearization of the dynamics for hovering and we take into account the approximated values and assumptions of the linearization section. For the design of the feedback loops PD controllers are used.</p>
+    </div>
+
+    <div class="section">
+        <h2>3. MOTION PLANNING</h2>
+        <p>Motion planning refers to the problem of computing a collision free path from start to goal given an environment with obstacles. Single query sampling based algorithms such as RRT, randomly sample points within the configuration space to construct a collision free path. Several variants of the RRT were introduced either to ensure optimality or faster convergence.</p>
+
+        <p>In this work a variant of RRT is presented, upon the basis of a bi-directional function. Two RRT trees are created, one that grows from start and the other from goal. These two trees grow until two sampled points, one from each tree, can connect them without a collision. If such a connection occurs the algorithm stops and the optimization of the created path begins.</p>
+
+        <p>The algorithm presented in Algorithm 1 initiated by storing the starting vertices of the two RRT trees. The two trees are maintained (in \(verts1\), \(edges1\) and \(verts2\), \(edges2\)) and expanded in every iteration by sampling simultaneously collision free samples (\(q\_sampled1\) and \(q\_sampled2\)). This samples are connected to their nearest neighbour, of which the index (\(near\_index1\) and \(near\_index2\)) are found using the Matlab function \(dsearchn\), and are checked by the \(path\_collision\_checker\) to ensure collision free connections. If both aforementioned criteria are satisfied, then \(flag1\) or \(flag2\) are raised for each sampled point respectively. This flags ensure that both trees will have the same amount of samples, as each tree is stuck on the iteration loop until both get collision free points and edges. If both flags are raised, than the checking of a collision free edge between the two trees happens. If such an edge exists, then the while loop breaks and the optimization of the path created starts, noted as \(path\_simplification\) on pseudo-code starts, otherwise the expansion of the trees continues.</p>
+
+        <p>Once the two trees have been connected their edges and vertices are passed to the \(back\_tracking\) function. The purpose of this function to identify the edges from the two trees that take the drone from the start to the goal. Specifically for the tree starting from the start node, it will return the path from start to the common connection between the two trees. For the tree starting from the goal it will return the path from the goal to the common connection. The two path portions are concatenated and the planned path to be followed by the draw is obtained.</p>
+
+        <p>The planned returned from the back tracking algorithm is simplified using the following process: there are two nested iterations over the final path nodes. The algorithm checks whether there are collision-free straight line connections between every pair of nodes in an ordered fashion. First, it checks the starting point with the other points in the list. Then, the feasible connection with the node that has the largest index is kept and the nodes that have indices in-between the first and such node are discarded from the list. The next iteration begins from the node that was used to simplify the path until the last node is reached. The optimization is performed in the total distance traveled. The process is depicted in Figure 2. All possible connections with the right-most shaded gray node are checked. It is visible how the path is simplified.</p>
+
+        <div class="figure">
+            <img src="..assets/images/simplification.png" alt="Path simplification process">
+            <div class="caption">Fig 2: Representation of the path simplification process. The final path contains does not contain unnecessary connections.</div>
+        </div>
+
+        <div class="algorithm">
+            <strong>Algorithm 1: Proposed RRT Algorithm Pseudocode</strong>
+            <pre>
+Input: Start, Goal, Map
+Output: RRT_path
+Initialize no_iter, edges1 and edges2.
+verts1 ← start; verts2 ← goal
+flag1 ← False; flag2 ← False
+
+For k = 2 to num_iter:
+    While True:
+        If (flag1 == false):
+            q_sampled1 ← sample_point(map)
+        If (flag2 == false):
+            q_sampled2 ← sample_point(map)
+        point_on_obstacle1 ← collide(map, q_sampled1)
+        point_on_obstacle2 ← collide(map, q_sampled2)
+        near_index1 ← dsearchn(verts1, q_sampled1)
+        near_index2 ← dsearchn(verts2, q_sampled2)
+        path_check1 ← [verts1(near_index1), q_sampled1]
+        path_check2 ← [verts2(near_index2), q_sampled2]
+        path_on_obstacle1 ← path_collision_checker(map, path_check1)
+        path_on_obstacle2 ← path_collision_checker(map, path_check2)
+        
+        If (point_on_obstacle1 == False) AND (path_on_obstacle1 == False):
+            edges1{k-1,1} ← verts1(near_index1,1:3)
+            edges1{k-1,2} ← q_sampled1
+        If (point_on_obstacle2 == False) AND (path_on_obstacle2 == False):
+            edges2{k-1,1} ← verts2(near_index2,1:3)
+            edges2{k-1,2} ← q_sampled2
+        If (flag1 == True) AND (flag2 == True):
+            flag1 = flag2 = false
+            final_path_check ← (q_sampled1, q_sampled2)
+            path_on_obstacle_final ← path_collision_checker(map, final_path_check)
+            If (path_on_obstacle_final == False):
+                flag_tree_connected = True
+            break
+    
+    verts1 ← q_sampled_1; verts2 ← q_sampled_2
+    If (flag_tree_connected = True):
+        break
+
+If (NOT Converged):
+    Return ERROR
+RRT_path ← back_tracking(start, goal, edges1, edges2, k-1)
+RRT_path ← path_simplification(RRT_path, map)
+            </pre>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. RESULTS</h2>
+        <p>For the sake of this application we have prepared a map of a room, where fire is considered an obstacle. In addition to fire, there are other obstacles that may exist in a house. We assume that every obstacle is convex and is characterized by a polyhedral geometric shape. Non-convex obstacles can be described as a union of convex obstacles.</p>
+
+        <div class="figure">
+            <img src="..assets/images/rrt_2.png" alt="RRT algorithm path">
+            <div class="caption">Fig 3: RRT algorithm path: the thick segments compose the planned with the algorithm. A YouTube video is provided showing the tree growth real time.</div>
+        </div>
+
+        <p>The B-RRT algorithm, Figure 4, is compared to a normal RRT algorithm Figure 3. In Figure 5, another map is provided for both algorithms, which does not necessarily imply that it is a room on fire, but it is added for the sake of comparing both algorithms in a different setup. The obstacles are marked in red and blue, and the connections of the trees can be seen clearly. The final path is shown with thick line segments. The tree grows within the boundaries of the map and those are the the maximum values of the axes. The initial and final position are located more or less on the extremes of the map.</p>
+
+        <p>For both algorithms, we performed a number of experimental runs on the Matlab environment and two of the basic criteria, run time and number of iterations are presented in Table 1. The code with which the results had been produced can be found in the attached files. The values provided come as a result of 1000 runs for each algorithm. It needs to be mentioned that all tests were conducted on the same machine, running an Intel 8550U processor. Furthermore a video link can be found on the caption of both figures, with the video of RRT accelerated 500 times, a value that can be derived from how much faster B-RRT runs, in order to be watchable in a lower amount of time.</p>
+
+        <table>
+            <caption>Table 1: Performance comparison of RRT and B-RRT</caption>
+            <thead>
+                <tr>
+                    <th rowspan="2">Algorithm name</th>
+                    <th colspan="3">run time (sec)</th>
+                    <th colspan="3">no. of iterations</th>
+                </tr>
+                <tr>
+                    <th>min</th>
+                    <th>mean</th>
+                    <th>max</th>
+                    <th>min</th>
+                    <th>mean</th>
+                    <th>max</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>RRT</td>
+                    <td>1.5434</td>
+                    <td>31.9930</td>
+                    <td>124.4538</td>
+                    <td>555</td>
+                    <td>11124</td>
+                    <td>42589</td>
+                </tr>
+                <tr>
+                    <td>proposed B-RRT</td>
+                    <td>0.0982</td>
+                    <td>1.1913</td>
+                    <td>17.4709</td>
+                    <td>2</td>
+                    <td>55.0983</td>
+                    <td>302</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="figure">
+            <img src="..assets/images/rrt_function_optimized3_cropped.png" alt="Proposed RRT algorithm path">
+            <div class="caption">Fig 4: Proposed RRT algorithm path: the thick segments compose the path planned with the RRT. The total path is considerably smaller. A YouTube video is provided showing the tree growth real time.</div>
+        </div>
+
+        <div class="figure">
+            <img src="..assets/images/map3_rrt.png" alt="RRT algorithm">
+            <img src="..assets/images/map3_rrt_opt.png" alt="Proposed RRT algorithm">
+            <div class="caption">Fig 5: a) RRT algorithm. b) Proposed RRT algorithm</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>5. DISCUSSION</h2>
+        <p>From the results, it can be seen that not only the proposed B-RRT algorithm produces a better trajectory, but also converges much faster in a shorter amount of time. If the maximum number of sample iterations is reduced significantly, e.g. 300, the RRT never converges, while the proposed algorithm does it almost every time. Our algorithm reduces the total computational stress significantly due to the lower number of iterations it requires. However, it should be noted that every iteration stresses the computational system more, as two trees are being computed simultaneously, which justifies the maximum time of the proposed B-RRT compared to RRT, even though the last requires much more samples.</p>
+
+        <p>A bidirectional algorithm, such as the one proposed, can show significantly better results in a map such as that of Figure 5, where the number of iterations needed to converge to the goal, especially in the region near it, is noticeably smaller. That depends on the tolerance region that is set. The later, is calculated based on difference parameters like the minimum obstacle size considered, etc.</p>
+
+        <p>The aforementioned, exploits the advantages of a bidirectional algorithm. However, the proposed algorithm, uses a collision free condition to connect the two trees. This 'heuristic' works most efficiently when we can expect relatively open spaces for the majority of the planning. For example, for a space with no obstacles in between, a connection would be immediate.</p>
+
+        <p>The complexity of the algorithm is: 2O(\(|V/2|\) log(\(|V/2|\) + \(|E/2|\))) + O\((V_F^2)\). The first part of the sum refers to the time complexity of bi-directional RRT (B-RRT), and the second part relates to the optimization (or simplification) of the path obtained that has \(V_F\) nodes, which consists of two loops: one that iterates over the nodes and the second one, iterates over the paths connecting the node of the first loop with the others. Therefore, the algorithm optimizes the path obtained in the bi-directional RRT, however, this does not mean it will become globally optimal. The optimization reduces the distance to travel of the path obtained in. Just as conventional RRT, the proposed B-RRT is probabilistically complete because the probability to finding a solution, if one exists, approaches one as the number of samples taken reaches infinity. The B-RRT does not ensure optimality even on the limit, based on the fact that RRT does not ensure either asymptotic optimality<span class="citation">[9]</span>.</p>
+
+        <p>The variant, RRT* performs better since it provides the global optimal path. However, it is not yet clear if the compilation time required for RRT* is greater than that of the proposed method and that can be investigated in the future. For future work, the presented B-RRT method can be improved to B-RRT* so the globally optimal solution can be found if possible. In order to do so, the RRT section needs to be adapted to RRT*.</p>
+    </div>
+
+    <div class="references">
+        <h2>REFERENCES</h2>
+        <ol>
+            <li>D. Devaurs, T. Siméon and J. Cortés, "Enhancing the Transition-based RRT to Deal with Complex Cost Spaces," IEEE International Conference on Robotics and Automation, 2013.</li>
+            <li>S. K. Choudhury, S. Dukkipati, P. Kumar and V. V.S., "A RRT* Motion Planning Approach for the Generalized Multi-Vehicle Heterogeneous PnP Problem," IEEE International Conference on Intelligent Robots and Systems, 2017.</li>
+            <li>P. G. Tang, "An Improved RRT*-Based Path Planning Approach for Fixed-Wing UAV," 2020.</li>
+            <li>D. A. Reyes Castro, S. Bhattacharya and N. Hover, "Path Planning using Cylindrical Vector Field and Timed Elastic Band for Multi-rotor UAVs in Unknown Environments," Journal of Guidance, Control, and Dynamics, 2019.</li>
+            <li>D. Quan, "System Dynamic Modelling and Control," in Introduction to Multicopter Design and Control, Springer, 2020.</li>
+            <li>D. S. Sabatino, "Quadrotor Control: Modeling, Nonlinear Control Design, and Simulation," 2015.</li>
+            <li>T. Lee, M. Leok and N. McClamroch, "Nonlinear Robust Tracking Control of a Quadrotor UAV on SE(3)," Asian Journal of Control, 2013.</li>
+            <li>M. S. Triantafyllou and F. S. Hover, "Maneuvering and Control of Marine Vehicles," 2003.</li>
+            <li>I. A. Qureshi and X. Ma, "Improvement and Implementation of the RRT* Algorithm," 2015.</li>
+        </ol>
+    </div>
+
+    <footer>
+        <p>The link to the repository where the simulation can be reproduced is: <a href="https://gitlab.com/gurudeep1998/group-31-planning-and-decision-making-project">https
