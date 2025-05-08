@@ -284,7 +284,7 @@ bottom: .4em;
 <p>Finally, we downsampled the slices and masks to 256 by max pooling, to decrease the size of the input. As can be seen in the resulting image, the information loss due to downsampling is tolerable:</p>
 <p><img src="../assets/dataset-vis-3.png" alt="dataset-vis-3"></p>
 <p>To use this dataset more efficiently with PyTorch, we created a class extending PyTorch&apos;s DataSet class and created indices for it that allow random access.</p>
-<h2 class="mume-header" id="instance-segmentation">Instance segmentation</h2>
+<h2 class="mume-header" id="instance-segmentation">Semantic segmentation</h2>
 
 <p>Before diving in the model architectures it would be wise to define the computer vision task that they aim to solve, the task of semantic segmentation.</p>
 <p>Semantic segmentation, or image segmentation, is the task of clustering parts of an image together which belong to the same object class. It is a form of pixel-level prediction because each pixel in an image is classified according to a category, making the labels class-aware [4]. Visualy, this can be seen in the image below (<a href="https://ai-pool.com/d/could-you-explain-me-how-instance-segmentation-works">source</a>), where also other computer vision taks are presented for comparison.</p>
